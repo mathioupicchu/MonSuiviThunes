@@ -192,17 +192,17 @@ tfoot td { font-weight:600; color:var(--text-dark); }
 /* NAVBAR */
 .navbar {
   position: fixed;
-  bottom:15px;      
+  bottom:15px;      /* plus d’espace du bas */
   left:10px;
   right:10px;
   background:#fff;
-  border-radius:25px; 
+  border-radius:25px; /* coins très arrondis pour style app */
   display:flex;
   justify-content:space-between;
   align-items:center;
-  height:80px;        
+  height:80px;        /* plus haute pour téléphone */
   font-weight:600;
-  box-shadow:0 6px 20px rgba(0,0,0,0.15); 
+  box-shadow:0 6px 20px rgba(0,0,0,0.15); /* ombre plus visible */
   padding:0 15px;
   z-index:1000;
 }
@@ -218,14 +218,14 @@ tfoot td { font-weight:600; color:var(--text-dark); }
   align-items:center;
   justify-content:center;
   padding:10px 0;
-  border-radius:15px;   
+  border-radius:15px;   /* chaque bouton a un léger arrondi */
   margin:0 3px;
-  background:#f9fafb;  
+  background:#f9fafb;  /* fond clair pour différencier chaque bouton */
 }
 
 .navbar a.active {
   color:#fff;
-  background:var(--primary); 
+  background:var(--primary); /* bouton actif coloré */
   box-shadow:0 4px 10px rgba(0,0,0,0.2);
   transform:translateY(-3px);
 }
@@ -235,6 +235,16 @@ tfoot td { font-weight:600; color:var(--text-dark); }
   transform:translateY(-2px);
 }
 
+@media (max-width:380px){
+  .navbar {
+    height:85px;  /* un peu plus haute pour petits écrans */
+    padding:0 8px;
+  }
+  .navbar a {
+    font-size:13px;
+    padding:8px 0;
+  }
+}
 </style>
 </head>
 
@@ -452,3 +462,4 @@ window.addEventListener("load", () => {
 
 </body>
 </html>
+
