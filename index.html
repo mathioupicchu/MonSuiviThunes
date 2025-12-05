@@ -194,34 +194,59 @@ th, td {
 /* NAVBAR */
 .navbar {
   position: fixed;
-  bottom:15px;
+  bottom:15px;      /* plus d’espace du bas */
   left:10px;
   right:10px;
   background:#fff;
-  border-radius:25px;
+  border-radius:25px; /* coins très arrondis pour style app */
   display:flex;
   justify-content:space-between;
-  height:80px;
   align-items:center;
+  height:80px;        /* plus haute pour téléphone */
+  font-weight:600;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15); /* ombre plus visible */
   padding:0 15px;
-  box-shadow:0 6px 20px rgba(0,0,0,0.15);
   z-index:1000;
 }
 
 .navbar a {
   flex:1;
-  text-align:center;
   text-decoration:none;
   color:var(--text-light);
   font-size:14px;
+  transition: all var(--transition);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
   padding:10px 0;
-  background:#f9fafb;
-  margin:0 4px;
-  border-radius:15px;
-  transition:all var(--transition);
+  border-radius:15px;   /* chaque bouton a un léger arrondi */
+  margin:0 3px;
+  background:#f9fafb;  /* fond clair pour différencier chaque bouton */
 }
-.navbar a.active { background:var(--primary); color:#fff; transform:translateY(-3px); box-shadow:0 4px 10px rgba(0,0,0,0.2); }
-.navbar a:hover { background:#e5e7eb; transform:translateY(-2px); }
+
+.navbar a.active {
+  color:#fff;
+  background:var(--primary); /* bouton actif coloré */
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  transform:translateY(-3px);
+}
+
+.navbar a:hover {
+  background:#e5e7eb;
+  transform:translateY(-2px);
+}
+
+@media (max-width:380px){
+  .navbar {
+    height:85px;  /* un peu plus haute pour petits écrans */
+    padding:0 8px;
+  }
+  .navbar a {
+    font-size:13px;
+    padding:8px 0;
+  }
+}
 </style>
 </head>
 
@@ -521,6 +546,7 @@ window.onload=afficher;
 
 </body>
 </html>
+
 
 
 
