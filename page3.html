@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Statistiques — Dépenses</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#3b82f6;
+  --bg:#f3f4f6;
+  --card:#fff;
+  --text:#111827;
+  --muted:#6b7280;
+  --radius:14px;
+  --shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-bottom:120px;
+}
+h1{margin:26px 0 6px;font-size:1.6rem}
+.month-bar{width:90%;max-width:900px;display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:14px}
+.month-bar button{background:var(--primary);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+.month-bar input{padding:8px;border-radius:10px;border:1px solid #ddd;background:#fff}
+
+.container{width:90%;max-width:900px;margin-bottom:16px}
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.stat-card{
+  background:var(--card);
+  padding:12px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+.stat-card h3{font-size:13px;color:var(--muted);margin-bottom:6px}
+.stat-card p{font-size:18px;font-weight:700;color:var(--primary)}
+
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1 1 320px}
+
+.chart-box{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:14px;
+  box-shadow:var(--shadow);
+  margin-bottom:14px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* top5 list */
+.top5{
+  background:var(--card);
+  padding:12px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  margin-top:12px;
+}
+.top5-controls{display:flex;gap:8px;margin-bottom:8px}
+.top5-controls button{flex:1;padding:6px;border:none;border-radius:8px;background:#f3f4f6;cursor:pointer;font-weight:600}
+.top5-controls button.active{background:var(--primary);color:#fff}
+
+.top5 h4{margin-bottom:8px;font-size:14px;color:var(--muted)}
+.top5 ul{list-style:none;padding:0;margin:0}
+.top5 li{display:flex;justify-content:space-between;padding:8px 6px;border-bottom:1px dashed #eee;font-weight:600}
+
+/* legend */
+.legend-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.legend-item{display:flex;gap:8px;align-items:center;font-size:13px}
+.legend-color{width:18px;height:18px;border-radius:4px;}
+
+
+.stacked-legend-container-fixed {
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:6px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  padding:4px 6px;
+  background:#fff;
+  border-top:1px solid #e5e7eb;
+  border-bottom-left-radius:14px;
+  border-bottom-right-radius:14px;
+  overflow:hidden;
+}
+
+.legend-arrow {
+  background:#eee;
+  border:none;
+  padding:6px 10px;
+  cursor:pointer;
+  border-radius:6px;
+  flex-shrink:0;
+}
+
+.stacked-legend-scroll {
+  overflow-x:auto;
+  white-space:nowrap;
+  flex:1;
+  margin:0 6px;
+  padding-bottom:4px;
+}
+
+/* stacked legend scrollable */
+.stacked-legend-scroll{overflow-x:auto; white-space:nowrap; flex:1; padding:6px 4px;}
+.stacked-legend-scroll::-webkit-scrollbar {height:6px;}
+.stacked-legend-scroll::-webkit-scrollbar-thumb {background:#cbd5e1;border-radius:3px;}
+.stacked-legend-scroll::-webkit-scrollbar-track {background:#f3f4f6;}
+
+.navbar{position:fixed;bottom:15px;left:10px;right:10px;background:#fff;border-radius:25px;display:flex;justify-content:space-between;align-items:center;height:80px;padding:0 15px;box-shadow:0 6px 20px rgba(0,0,0,0.15);z-index:1000}
+.navbar a{flex:1;text-decoration:none;color:var(--muted);display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;background:#f9fafb;margin:0 4px}
+.navbar a.active{background:var(--primary);color:#fff;transform:translateY(-3px)}
+@media (max-width:420px){
+  .chart-box{height:300px}
+}
+</style>
+</head>
+<body>
+
+<h1>Statistiques — Dépenses (mois sélectionné)</h1>
+
+<div class="month-bar container">
+  <button id="prevMonth">&lt;</button>
+  <input type="month" id="monthSelector">
+  <button id="nextMonth">&gt;</button>
+</div>
+
+<div class="container stats-grid" id="summaryGrid">
+  <div class="stat-card">
+    <h3>Jours sans dépense</h3>
+    <p id="daysNoSpend">0</p>
+  </div>
+  <div class="stat-card">
+    <h3>Jour le plus dépensé</h3>
+    <p id="dayMax">0 €</p>
+  </div>
+  <div class="stat-card">
+    <h3>Moyenne (€ / jour)</h3>
+    <p id="avgPerDay">0 €</p>
+  </div>
+  <div class="stat-card">
+    <h3>Total du mois</h3>
+    <p id="totalMonth">0 €</p>
+  </div>
+  <!-- La carte "Tendance" a été supprimée -->
+</div>
+
+<!-- repartition + top5 -->
+<div class="container row">
+  <div class="col chart-box">
+    <canvas id="pieTypes" style="display:block; width:100%; height:100%;"></canvas>
+  </div>
+  <div class="col">
+    <div class="top5">
+      <div class="top5-controls">
+        <button id="btnTopTypes" class="active">Types</button>
+        <button id="btnTopFamilles" >Familles</button>
+      </div>
+      <h4 id="top5Title">Top 5 des types (par montant)</h4>
+      <ul id="top5List"></ul>
+      <div class="legend-row" id="familyLegend"></div>
+    </div>
+  </div>
+</div>
+
+<!-- stacked bars per day -->
+<div class="container chart-box" style="position:relative; height:380px; padding-bottom:55px;">
+  <canvas id="stackedDay" style="display:block; width:100%; height:100%;"></canvas>
+
+  <div class="stacked-legend-container-fixed">
+    <button id="scrollLeft" class="legend-arrow">◀</button>
+    <div id="stackedDayLegend" class="stacked-legend-scroll"></div>
+    <button id="scrollRight" class="legend-arrow">▶</button>
+  </div>
+</div>
+
+<!-- months history (total par mois) -->
+<div class="container chart-box" style="height:300px;">
+  <canvas id="monthsBar" style="display:block; width:100%; height:100%;"></canvas>
+</div>
+
+<div class="navbar">
+  <a href="index.html">🏠</a>
+  <a href="page2.html">Historique</a>
+  <a href="page3.html" class="active">Stats</a>
+  <a href="page4.html">Catalogue</a>
+  <a href="page5.html">⚙️</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(() => {
+  const monthSelector = document.getElementById('monthSelector');
+  const prevMonthBtn = document.getElementById('prevMonth');
+  const nextMonthBtn = document.getElementById('nextMonth');
+
+  const daysNoSpendEl = document.getElementById('daysNoSpend');
+  const dayMaxEl = document.getElementById('dayMax');
+  const avgPerDayEl = document.getElementById('avgPerDay');
+  const totalMonthEl = document.getElementById('totalMonth');
+
+  const pieCtx = document.getElementById('pieTypes').getContext('2d');
+  const stackedDayCtx = document.getElementById('stackedDay').getContext('2d');
+  const monthsBarCtx = document.getElementById('monthsBar').getContext('2d');
+
+  const top5List = document.getElementById('top5List');
+  const top5Title = document.getElementById('top5Title');
+  const btnTopTypes = document.getElementById('btnTopTypes');
+  const btnTopFamilles = document.getElementById('btnTopFamilles');
+  const familyLegend = document.getElementById('familyLegend');
+
+  let pieChart = null;
+  let stackedDayChart = null;
+  let monthsBarChart = null;
+
+  let displayMode = 'types';
+
+  function loadLS(){
+    return {
+      familles: JSON.parse(localStorage.getItem('familles')) || [],
+      types: JSON.parse(localStorage.getItem('types')) || [],
+      jours: JSON.parse(localStorage.getItem('jours')) || {}
+    };
+  }
+
+  function todayMonthStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+  function ensureMonthSelector(){ if(!monthSelector.value) monthSelector.value = todayMonthStr(); }
+  function changeMonth(delta){
+    const [y,m] = monthSelector.value.split('-').map(Number);
+    let my = y, mm = m + delta;
+    if(mm<1){ mm=12; my=y-1; } if(mm>12){ mm=1; my=y+1; }
+    monthSelector.value=`${my}-${String(mm).padStart(2,'0')}`;
+    renderAll();
+  }
+
+  prevMonthBtn.addEventListener('click', ()=>changeMonth(-1));
+  nextMonthBtn.addEventListener('click', ()=>changeMonth(1));
+  monthSelector.addEventListener('change', renderAll);
+
+  function hexToRgb(hex){ if(!hex) return null; hex=hex.replace('#',''); if(hex.length===3) hex=hex.split('').map(c=>c+c).join(''); const r=parseInt(hex.substring(0,2),16); const g=parseInt(hex.substring(2,4),16); const b=parseInt(hex.substring(4,6),16); return {r,g,b}; }
+  function shadeHex(hex,p){ const rgb=hexToRgb(hex); if(!rgb)return hex; const r=Math.min(255,Math.max(0,Math.round(rgb.r*(1+p)))); const g=Math.min(255,Math.max(0,Math.round(rgb.g*(1+p)))); const b=Math.min(255,Math.max(0,Math.round(rgb.b*(1+p)))); return `rgb(${r},${g},${b})`; }
+
+  function daysInMonth(y,m){ const last=new Date(y,m,0).getDate(); const arr=[]; for(let d=1;d<=last;d++){ arr.push(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`); } return arr; }
+
+  function aggregateTypes(monthStr, jours, types, familles){
+    const [y,m] = monthStr.split('-').map(Number); const days=daysInMonth(y,m);
+    const map={};
+    days.forEach(day=>{
+      (jours[day]||[]).forEach(entry=>{
+        const amt=parseFloat(entry.montant)||0;
+        let typeId=entry.typeId||null;
+        let famId=entry.familleId||null;
+        if(!typeId && entry.nom && types.length){ const t=types.find(tt=>tt.nom && entry.nom.toLowerCase().includes(tt.nom.toLowerCase())); if(t) typeId=t.id; }
+        if(!famId && typeId){ const t=types.find(tt=>tt.id===typeId); if(t) famId=t.familleId||famId; }
+        let key,label;
+        if(typeId){ key=`type_${typeId}`; const tt=types.find(t=>t.id===typeId); label=tt?tt.nom:`Type ${typeId}`; }
+        else if(entry.nom){ key=`name_${entry.nom}`; label=entry.nom; }
+        else { key='unknown'; label='Inconnu'; }
+        if(!map[key]) map[key]={label,typeId:typeId||null,familleId:famId||null,amount:0};
+        map[key].amount+=amt;
+      });
+    });
+    return Object.keys(map).map(k=>({key:k,...map[k]})).sort((a,b)=>b.amount-a.amount);
+  }
+
+  function aggregateFamilles(typesAgg, familles){
+    const map={};
+    typesAgg.forEach(t=>{
+      const fid = (t.familleId === null || t.familleId === undefined) ? 'Autres' : String(t.familleId);
+      if(!map[fid]) map[fid]={label:fid, amount:0, familleId: (fid==='Autres'? null: fid)};
+      map[fid].amount += t.amount;
+    });
+    return Object.keys(map).map(k=>{
+      const item = map[k];
+      let label = item.label;
+      if(item.familleId){
+        const fam = familles.find(f=>String(f.id) === String(item.familleId));
+        if(fam && fam.nom) label = fam.nom;
+      } else if(label==='Autres') label='Autres';
+      return { key: `fam_${item.familleId||'Autres'}`, label, familleId: item.familleId || null, amount: item.amount };
+    }).sort((a,b)=>b.amount - a.amount);
+  }
+
+  function buildPieData(typesAgg, familles){
+    if(displayMode === 'familles'){
+      const famAgg = aggregateFamilles(typesAgg, familles);
+      return { labels: famAgg.map(f=>f.label), data: famAgg.map(f=>f.amount), colors: famAgg.map(f=>{ const fam = familles.find(x=>String(x.id) === String(f.familleId)); return fam && fam.couleur ? fam.couleur : '#e5e7eb'; }) };
+    } else {
+      const sorted=[...typesAgg].sort((a,b)=>{ const fa=String(a.familleId||''); const fb=String(b.familleId||''); if(fa===fb) return b.amount-a.amount; return fa.localeCompare(fb); });
+      return {
+        labels: sorted.map(t=>t.label),
+        data: sorted.map(t=>t.amount),
+        colors: sorted.map((t,idx)=>{ const fam=familles.find(f=>String(f.id)===String(t.familleId)); if(fam && fam.couleur){ return shadeHex(fam.couleur,((idx%3)-1)*0.06); } const palette=['#3b82f6','#f97316','#ef4444','#4ade80','#a855f7','#facc15','#06b6d4','#fb7185']; return palette[idx%palette.length]; })
+      };
+    }
+  }
+
+  function renderTop5(typesAgg,familles,types){
+    let dataArr = displayMode==='familles'?aggregateFamilles(typesAgg,familles).slice(0,5):typesAgg.slice(0,5);
+    top5Title.textContent = displayMode==='familles'?'Top 5 des familles (par montant)':'Top 5 des types (par montant)';
+    top5List.innerHTML='';
+    dataArr.forEach(item=>{
+      const fam = familles.find(f=>String(f.id)===String(item.familleId));
+      const li=document.createElement('li');
+      const left=document.createElement('span');
+      if(fam && displayMode==='types'){
+        const small=document.createElement('small');
+        small.style.opacity='0.7';
+        small.style.marginRight='4px';
+        small.textContent=fam.nom;
+        left.appendChild(small);
+      }
+      const mainText=document.createTextNode(item.label);
+      left.appendChild(mainText);
+      const right=document.createElement('span');
+      right.textContent=`${item.amount.toFixed(2)} €`;
+      li.appendChild(left);
+      li.appendChild(right);
+      top5List.appendChild(li);
+    });
+
+    const familyMap={};
+    typesAgg.forEach(it=>{ if(it.familleId) familyMap[String(it.familleId)]=true; else if(it.typeId){ const t=types.find(tt=>tt.id===it.typeId); if(t && t.familleId) familyMap[String(t.familleId)]=true; } });
+    familyLegend.innerHTML='';
+    Object.keys(familyMap).forEach(fid=>{
+      const fam=familles.find(f=>String(f.id)===String(fid));
+      if(!fam) return;
+      const item=document.createElement('div');
+      item.className='legend-item';
+      const color=document.createElement('span');
+      color.className='legend-color';
+      color.style.background=fam.couleur||'#ddd';
+      const label=document.createElement('span');
+      label.textContent=fam.nom;
+      item.appendChild(color);
+      item.appendChild(label);
+      familyLegend.appendChild(item);
+    });
+  }
+
+  function renderAll(){
+    ensureMonthSelector();
+    const {familles, types, jours} = loadLS();
+    const monthStr = monthSelector.value;
+    const typesAgg = aggregateTypes(monthStr, jours, types, familles);
+
+    renderTop5(typesAgg, familles, types);
+
+    // Mise à jour stats simples
+    const [y, m] = monthStr.split('-').map(Number);
+    const allDays = daysInMonth(y, m);
+
+    // jours passés jusqu'à aujourd'hui
+    const today = new Date();
+    let daysPassed;
+    if(today.getFullYear() === y && (today.getMonth()+1) === m){
+      daysPassed = allDays.slice(0, today.getDate()); // jours du 1 au jour actuel
+    } else {
+      daysPassed = allDays; // mois passé ou futur complet
+    }
+
+    const dayAmounts = daysPassed.map(d => (jours[d]||[]).reduce((sum, e) => sum + (parseFloat(e.montant)||0), 0));
+
+    const noSpend = dayAmounts.filter(v => v === 0).length;
+    const maxAmount = Math.max(...dayAmounts);
+    const avgAmount = dayAmounts.length ? dayAmounts.reduce((a,b)=>a+b,0)/dayAmounts.length : 0;
+    const totalAmount = dayAmounts.reduce((a,b)=>a+b,0);
+
+    daysNoSpendEl.textContent = `${noSpend} / ${dayAmounts.length}`;
+    dayMaxEl.textContent = `${maxAmount.toFixed(2)} €`;
+    avgPerDayEl.textContent = `${avgAmount.toFixed(2)} €`;
+    totalMonthEl.textContent = `${totalAmount.toFixed(2)} €`;
+
+    // pie chart
+    const pieData = buildPieData(typesAgg, familles);
+    if(pieChart) pieChart.destroy();
+    pieChart = new Chart(pieCtx, {
+      type:'pie',
+      data: { labels: pieData.labels, datasets: [{ data: pieData.data, backgroundColor: pieData.colors }] }
+    });
+
+    // stacked bars daily
+    const labels = allDays.map(d => d.split('-')[2]);
+    const datasets = [];
+    typesAgg.forEach(t => {
+      if(!t.familleId) return;
+      const fam = familles.find(f => String(f.id) === String(t.familleId));
+      const color = fam && fam.couleur ? fam.couleur : '#ccc';
+      const data = allDays.map(day => (jours[day]||[]).filter(e=>String(e.typeId)===String(t.typeId)).reduce((s,e)=>s+(parseFloat(e.montant)||0),0));
+      datasets.push({ label: t.label, data, backgroundColor: color });
+    });
+    if(stackedDayChart) stackedDayChart.destroy();
+    stackedDayChart = new Chart(stackedDayCtx, {
+      type:'bar',
+      data:{ labels, datasets },
+      options:{ plugins:{ legend:{ display:false } }, responsive:true, scales:{ x:{ stacked:true }, y:{ stacked:true } } }
+    });
+
+    // stacked legend scrollable
+    const legendContainer = document.getElementById('stackedDayLegend');
+    legendContainer.innerHTML = '';
+    datasets.forEach(d=>{
+      const item = document.createElement('div');
+      item.className='legend-item';
+      item.style.display='inline-flex';
+      item.style.alignItems='center';
+      item.style.marginRight='8px';
+      const c = document.createElement('span');
+      c.className='legend-color';
+      c.style.background = d.backgroundColor;
+      item.appendChild(c);
+      const l = document.createElement('span');
+      l.textContent = d.label;
+      item.appendChild(l);
+      legendContainer.appendChild(item);
+    });
+
+    // monthly bar chart
+    const monthLabels = Array.from({length:12},(_,i)=>i+1);
+    const monthTotals = monthLabels.map(m=>{
+      const daysOfMonth = daysInMonth(monthStr.split('-')[0], m);
+      return daysOfMonth.reduce((sum,d)=>sum + (jours[d]?.reduce((s,e)=>s+(parseFloat(e.montant)||0),0)||0),0);
+    });
+    if(monthsBarChart) monthsBarChart.destroy();
+    monthsBarChart = new Chart(monthsBarCtx,{
+      type:'bar',
+      data:{
+        labels: monthLabels.map(m=>'M'+m),
+        datasets:[{ label:'Total mois', data: monthTotals, backgroundColor:'#3b82f6' }]
+      },
+      options:{ plugins:{ legend:{ display:false } }, responsive:true }
+    });
+  }
+
+  btnTopTypes.addEventListener('click',()=>{ displayMode='types'; btnTopTypes.classList.add('active'); btnTopFamilles.classList.remove('active'); renderAll(); });
+  btnTopFamilles.addEventListener('click',()=>{ displayMode='familles'; btnTopFamilles.classList.add('active'); btnTopTypes.classList.remove('active'); renderAll(); });
+
+  document.getElementById('scrollLeft').addEventListener('click',()=>{document.getElementById('stackedDayLegend').scrollBy({left:-80,behavior:'smooth'})});
+  document.getElementById('scrollRight').addEventListener('click',()=>{document.getElementById('stackedDayLegend').scrollBy({left:80,behavior:'smooth'})});
+
+  ensureMonthSelector();
+  renderAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gestion des données</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #3b82f6;
+  --secondary: #6b7280;
+  --bg: #f3f4f6;
+  --card-bg: #ffffff;
+  --danger: #ef4444;
+  --text-dark: #111827;
+  --text-light: #6b7280;
+  --border-radius: 14px;
+  --shadow: 0 6px 20px rgba(0,0,0,0.08);
+  --transition: 0.25s ease;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  margin:0;
+  padding-top:40px;
+  padding-bottom:100px;
+}
+
+h1 {
+  color:#333;
+  margin-bottom:30px;
+  text-align:center;
+}
+
+.container {
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+  width:90%;
+  max-width:500px;
+  text-align:center;
+  box-sizing:border-box;
+}
+
+button {
+  padding:10px 20px;
+  font-size:16px;
+  border:none;
+  border-radius:8px;
+  background-color:#2e86de;
+  color:white;
+  cursor:pointer;
+  transition:background 0.2s;
+  margin:10px;
+}
+
+button:hover { background-color:#1b4f91; }
+#resetBtn { background-color:#dc3545; }
+#resetBtn:hover { background-color:#a71d2a; }
+input[type="file"] { display:none; }
+
+.version {
+  margin-top:20px;
+  font-size:14px;
+  color:#888;
+}
+
+/* Navbar identique aux autres pages */
+.navbar {
+  position: fixed;
+  bottom:15px;
+  left:10px;
+  right:10px;
+  background:#fff;
+  border-radius:25px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  height:80px;
+  font-weight:600;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15);
+  padding:0 15px;
+  z-index:1000;
+}
+
+.navbar a {
+  flex:1;
+  text-decoration:none;
+  color:var(--text-light);
+  font-size:14px;
+  transition: all var(--transition);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:10px 0;
+  border-radius:15px;
+  margin:0 3px;
+  background:#f9fafb;
+}
+
+.navbar a.active {
+  color:#fff;
+  background:var(--primary);
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  transform:translateY(-3px);
+}
+
+.navbar a:hover {
+  background:#e5e7eb !important;
+  transform:translateY(-2px) !important;
+}
+
+@media (max-width:380px){
+  .container { width:95%; padding:12px; }
+  button { font-size:14px; padding:8px 16px; margin:6px; }
+}
+</style>
+</head>
+<body>
+
+<h1>Gestion des données</h1>
+
+<div class="container">
+  <p>Tu peux exporter, importer ou réinitialiser toutes tes données.</p>
+
+  <button id="exportBtn">📤 Exporter les données</button>
+  
+  <label for="importFile">
+    <button id="importBtn">📥 Importer les données</button>
+  </label>
+  <input type="file" id="importFile" accept=".json">
+
+  <button id="resetBtn">🗑️ Réinitialiser toutes les données</button>
+
+
+  <!-- ===================== -->
+  <!--      BUDGET MENSUEL   -->
+  <!-- ===================== -->
+
+  <h3 style="margin-top:25px; color:#333;">Budget mensuel</h3>
+
+  <div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">
+    <input 
+      id="budgetInput"
+      type="number"
+      placeholder="Budget du mois (€)"
+      style="
+        padding:10px;
+        font-size:16px;
+        border-radius:10px;
+        border:1px solid #ccc;
+        text-align:center;
+      "
+    />
+
+    <button id="saveBudgetBtn" style="background:#10b981;">💾 Enregistrer le budget</button>
+  </div>
+
+
+  <div class="version">Version 2.1</div>
+</div>
+
+<div class="navbar">
+  <a href="index.html" >🏠</a>
+  <a href="page2.html">Historique</a>
+  <a href="page3.html">Statistiques</a>
+  <a href="page4.html">Catalogue</a>
+  <a href="page5.html"class="active">⚙️</a>
+</div>
+
+<script>
+const exportBtn = document.getElementById("exportBtn");
+const importFile = document.getElementById("importFile");
+const resetBtn = document.getElementById("resetBtn");
+
+// Liste de toutes les clés à gérer
+const DATA_KEYS = ["jours", "familles", "types", "catalogue", "settings"];
+
+// === EXPORT ===
+exportBtn.addEventListener("click", () => {
+  try {
+    const data = {};
+    DATA_KEYS.forEach(k => {
+      const val = localStorage.getItem(k);
+      if(val !== null) data[k] = JSON.parse(val);
+    });
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "donnees_sauvegarde.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert("✅ Export réussi ! Le fichier 'donnees_sauvegarde.json' a été téléchargé.");
+  } catch (err) {
+    console.error("Erreur d’export :", err);
+    alert("❌ Une erreur est survenue pendant l’export.");
+  }
+});
+
+// === IMPORT ===
+document.getElementById("importBtn").addEventListener("click", () => importFile.click());
+
+importFile.addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      DATA_KEYS.forEach(k => {
+        if (data[k] !== undefined) localStorage.setItem(k, JSON.stringify(data[k]));
+      });
+
+      alert("✅ Données importées avec succès !");
+      location.reload();
+    } catch (err) {
+      console.error("Erreur d’import :", err);
+      alert("❌ Fichier invalide ou corrompu.");
+    }
+  };
+  reader.readAsText(file);
+});
+
+// === RÉINITIALISER ===
+resetBtn.addEventListener("click", () => {
+  if (confirm("⚠️ Es-tu sûr de vouloir tout réinitialiser ? Cette action est irréversible.")) {
+    DATA_KEYS.forEach(k => localStorage.removeItem(k));
+    alert("🗑️ Toutes les données ont été supprimées !");
+    location.reload();
+  }
+});
+
+
+// =======================
+//       BUDGET JS
+// =======================
+
+// Charger budget
+function loadBudget() {
+  const settings = JSON.parse(localStorage.getItem("settings")) || {};
+  document.getElementById("budgetInput").value = settings.budget ?? "";
+}
+loadBudget();
+
+// Sauvegarder budget
+document.getElementById("saveBudgetBtn").addEventListener("click", () => {
+  const value = parseFloat(document.getElementById("budgetInput").value);
+
+  if (isNaN(value) || value <= 0) {
+    alert("❌ Merci d’entrer un budget valide (nombre positif).");
+    return;
+  }
+
+  const settings = JSON.parse(localStorage.getItem("settings")) || {};
+  settings.budget = value;
+
+  localStorage.setItem("settings", JSON.stringify(settings));
+
+  alert("✅ Budget enregistré !");
+});
+</script>
+
+</body>
+</html>

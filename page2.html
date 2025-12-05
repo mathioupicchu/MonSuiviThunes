@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="UTF-8" />
+<title>Historique des dépenses</title>
+
+<!-- FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #3b82f6;
+  --secondary: #6b7280;
+  --bg: #f3f4f6;
+  --card-bg: #ffffff;
+  --danger: #ef4444;
+  --text-dark: #111827;
+  --text-light: #6b7280;
+  --border-radius: 14px;
+  --shadow: 0 6px 20px rgba(0,0,0,0.08);
+  --transition: 0.25s ease;
+}
+
+* { box-sizing: border-box; margin:0; padding:0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-bottom:100px;
+}
+
+h1 {
+  margin: 25px 0 15px 0;
+  color: var(--text-dark);
+  font-weight:600;
+  font-size:1.8rem;
+  text-align:center;
+}
+
+/* DATE BAR */
+.date-bar {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.date-bar input {
+  padding:10px;
+  font-size:16px;
+  border-radius:var(--border-radius);
+  border:1px solid #d1d5db;
+  background:#fff;
+  text-align:center;
+  transition:border-color var(--transition);
+}
+
+.date-bar input:focus { border-color: var(--primary); outline:none; }
+
+.date-bar button {
+  padding:10px 16px;
+  font-size:16px;
+  border:none;
+  border-radius:var(--border-radius);
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition: all var(--transition);
+}
+
+.date-bar button:hover { background:#2563eb; transform:translateY(-2px); }
+
+/* TABLEAU */
+table {
+  width:90%;
+  max-width:400px;
+  border-collapse:collapse;
+  margin-bottom:20px;
+  font-size:0.95rem;
+}
+
+th, td {
+  border-bottom:1px solid #e5e7eb;
+  padding:6px 8px;
+  text-align:center;
+}
+
+tfoot td { font-weight:600; color:var(--text-dark); }
+
+.delete {
+  color: var(--danger);
+  cursor:pointer;
+  font-weight:bold;
+  transition: transform var(--transition);
+}
+
+.delete:hover { transform:scale(1.2); }
+
+/* TOTAL */
+.total {
+  font-weight:600;
+  font-size:1rem;
+  margin-bottom:25px;
+  color:var(--text-dark);
+}
+
+/* CALENDAR */
+.calendar-container {
+  width:90%;
+  max-width:600px;
+  background: var(--card-bg);
+  padding:15px;
+  border-radius:var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom:20px;
+}
+
+.calendar-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.calendar-header button {
+  background: var(--primary);
+  color:#fff;
+  border:none;
+  padding:6px 12px;
+  border-radius:var(--border-radius);
+  font-weight:600;
+  cursor:pointer;
+  transition: all var(--transition);
+}
+
+.calendar-header button:hover { background:#2563eb; }
+
+.calendar { 
+  display:grid; 
+  grid-template-columns:repeat(7,1fr); 
+  gap:4px; 
+}
+
+.day {
+  border:1px solid #ccc;
+  min-height:60px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  align-items:center;
+  font-size:12px;
+  border-radius:8px;
+  cursor:pointer;
+  padding:4px;
+  transition: transform var(--transition);
+}
+
+.day:hover { transform:translateY(-2px); }
+
+.day-number { font-weight:600; font-size:14px; margin-bottom:2px; }
+
+.day-total { font-size:12px; font-weight:500; }
+
+.green { background:#b2fab4; }
+.yellow { background:#fff5b2; }
+.orange { background:#ffc27f; }
+.red { background:#ff7f7f; }
+.disabled { background:#eee; cursor:not-allowed; color:#999; }
+
+/* LEGEND */
+.legend {
+  display:flex;
+  justify-content:space-around;
+  width:90%;
+  max-width:600px;
+  margin-bottom:40px;
+  font-size:14px;
+}
+
+.legend div { display:flex; align-items:center; gap:5px; }
+.legend span { width:20px; height:20px; border-radius:4px; display:inline-block; }
+
+/* NAVBAR */
+.navbar {
+  position: fixed;
+  bottom:15px;      
+  left:10px;
+  right:10px;
+  background:#fff;
+  border-radius:25px; 
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  height:80px;        
+  font-weight:600;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15); 
+  padding:0 15px;
+  z-index:1000;
+}
+
+.navbar a {
+  flex:1;
+  text-decoration:none;
+  color:var(--text-light);
+  font-size:14px;
+  transition: all var(--transition);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:10px 0;
+  border-radius:15px;   
+  margin:0 3px;
+  background:#f9fafb;  
+}
+
+.navbar a.active {
+  color:#fff;
+  background:var(--primary); 
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  transform:translateY(-3px);
+}
+
+.navbar a:hover {
+  background:#e5e7eb;
+  transform:translateY(-2px);
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Historique des dépenses</h1>
+
+<div class="date-bar">
+  <input type="date" id="dateSelector">
+  <button id="btnToday">Aujourd'hui</button>
+</div>
+
+<table id="tableau">
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Famille</th>
+      <th>Type</th>
+      <th>Montant (€)</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<div class="total" id="total">Total : 0 €</div>
+
+<div class="calendar-container">
+  <div class="calendar-header">
+    <button id="prevMonth">&lt;</button>
+    <label>Mois : <input type="month" id="monthSelector"></label>
+    <button id="nextMonth">&gt;</button>
+  </div>
+  <div class="calendar" id="calendar"></div>
+</div>
+
+<div class="legend">
+  <div><span class="green"></span> 0–10 €</div>
+  <div><span class="yellow"></span> 10–20 €</div>
+  <div><span class="orange"></span> 20–40 €</div>
+  <div><span class="red"></span> ≥40 €</div>
+</div>
+
+<div class="navbar">
+  <a href="index.html">🏠</a>
+  <a href="page2.html" class="active">Historique</a>
+  <a href="page3.html">Statistiques</a>
+  <a href="page4.html">Catalogue</a>
+  <a href="page5.html">⚙️</a>
+</div>
+
+<script>
+/* -----------------------------
+   VARIABLES & LOCALSTORAGE
+------------------------------*/
+const dateSelector = document.getElementById("dateSelector");
+const btnToday = document.getElementById("btnToday");
+const tableauBody = document.querySelector("#tableau tbody");
+const totalDiv = document.getElementById("total");
+const monthSelector = document.getElementById("monthSelector");
+const calendar = document.getElementById("calendar");
+const prevMonthBtn = document.getElementById("prevMonth");
+const nextMonthBtn = document.getElementById("nextMonth");
+
+const familles = JSON.parse(localStorage.getItem("familles")) || [];
+const types = JSON.parse(localStorage.getItem("types")) || [];
+let jours = JSON.parse(localStorage.getItem("jours")) || {};
+
+const today = new Date().toISOString().slice(0,10);
+const currentMonth = today.slice(0,7);
+
+dateSelector.max = today;
+monthSelector.max = currentMonth;
+dateSelector.value = today;
+monthSelector.value = currentMonth;
+
+let dateCourante = today;
+
+/* -----------------------------
+   AFFICHAGE DU JOUR
+------------------------------*/
+function afficherJour(){
+  if(!jours[dateCourante]) jours[dateCourante] = [];
+  tableauBody.innerHTML = "";
+
+  let total = 0;
+
+  jours[dateCourante].forEach((depense, i) => {
+    const fam = familles.find(f => f.id === depense.familleId)?.nom || "?";
+    const typ = types.find(t => t.id === depense.typeId)?.nom || "?";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${depense.nom}</td>
+      <td>${fam}</td>
+      <td>${typ}</td>
+      <td>${depense.montant.toFixed(2)} €</td>
+      <td><span class="delete" data-index="${i}">✖</span></td>
+    `;
+    tableauBody.appendChild(tr);
+    total += depense.montant;
+  });
+
+  totalDiv.textContent = "Total : " + total.toFixed(2) + " €";
+  localStorage.setItem("jours", JSON.stringify(jours));
+}
+
+/* DELETE LIGNE */
+tableauBody.addEventListener("click", e => {
+  if(e.target.classList.contains("delete")){
+    const index = e.target.dataset.index;
+    jours[dateCourante].splice(index,1);
+    localStorage.setItem("jours", JSON.stringify(jours));
+    afficherJour();
+    afficherCalendrier(monthSelector.value);
+  }
+});
+
+/* SELECT DATE */
+dateSelector.addEventListener("change", () => {
+  dateCourante = dateSelector.value;
+  afficherJour();
+});
+
+/* TODAY BUTTON */
+btnToday.addEventListener("click", () => {
+  dateCourante = today;
+  dateSelector.value = today;
+  afficherJour();
+});
+
+/* -----------------------------
+   CALENDRIER
+------------------------------*/
+monthSelector.addEventListener("change", () => afficherCalendrier(monthSelector.value));
+prevMonthBtn.addEventListener("click", () => changerMois(-1));
+nextMonthBtn.addEventListener("click", () => changerMois(1));
+
+function changerMois(delta){
+  let [year, month] = monthSelector.value.split("-").map(Number);
+  month += delta;
+  if(month <1){ month=12; year--; }
+  if(month>12){ month=1; year++; }
+  const newMonth = `${year}-${String(month).padStart(2,'0')}`;
+  monthSelector.value = newMonth;
+  afficherCalendrier(newMonth);
+}
+
+function afficherCalendrier(mois){
+  calendar.innerHTML = "";
+  const [year, month] = mois.split("-").map(Number);
+  const firstDay = new Date(year, month-1, 1);
+  const lastDay = new Date(year, month, 0);
+  const daysInMonth = lastDay.getDate();
+  const startDayIndex = (firstDay.getDay()+6)%7;
+  const prevMonthLastDay = new Date(year, month-1, 0).getDate();
+
+  for(let i=0; i<42; i++){
+    const div = document.createElement("div");
+    div.classList.add("day");
+
+    let dayNumber, totalJour, dateStr, isCurrentMonth = true;
+
+    if(i < startDayIndex){
+      dayNumber = prevMonthLastDay - startDayIndex + i + 1;
+      div.classList.add("disabled");
+      isCurrentMonth = false;
+      const d = new Date(year, month-2, dayNumber);
+      dateStr = d.toISOString().slice(0,10);
+    }
+    else if(i >= startDayIndex + daysInMonth){
+      dayNumber = i - (startDayIndex + daysInMonth) + 1;
+      div.classList.add("disabled");
+      isCurrentMonth = false;
+      const d = new Date(year, month, dayNumber);
+      dateStr = d.toISOString().slice(0,10);
+    }
+    else{
+      dayNumber = i - startDayIndex + 1;
+      dateStr = `${year}-${String(month).padStart(2,'0')}-${String(dayNumber).padStart(2,'0')}`;
+    }
+
+    totalJour = jours[dateStr] ? jours[dateStr].reduce((s, d)=>s + d.montant, 0) : 0;
+
+    // COULEURS € €
+    if(totalJour === 0) div.classList.add("green");
+    else if(totalJour <= 10) div.classList.add("green");
+    else if(totalJour <= 20) div.classList.add("yellow");
+    else if(totalJour <= 40) div.classList.add("orange");
+    else div.classList.add("red");
+
+    div.innerHTML = `
+      <div class="day-number">${dayNumber}</div>
+      <div class="day-total">${totalJour.toFixed(2)} €</div>
+    `;
+
+    if(isCurrentMonth){
+      div.addEventListener("click", () => {
+        dateCourante = dateStr;
+        dateSelector.value = dateStr;
+        afficherJour();
+      });
+    }
+
+    calendar.appendChild(div);
+  }
+}
+
+/* INIT */
+window.addEventListener("load", () => {
+  afficherJour();
+  afficherCalendrier(currentMonth);
+});
+</script>
+
+</body>
+</html>

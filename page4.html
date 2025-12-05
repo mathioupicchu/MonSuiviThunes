@@ -1,0 +1,402 @@
+<!DOCTYPE html> 
+<html lang="fr">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<title>Catalogue des dépenses - Page 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #3b82f6;
+  --bg: #f3f4f6;
+  --card-bg: #ffffff;
+  --text-dark: #111827;
+  --text-light: #6b7280;
+}
+
+body {
+  font-family: 'Inter', sans-serif; 
+  background-color: #f7f7f7; 
+  margin:0; 
+  padding-bottom:110px;
+}
+
+.container, .famille-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto;
+  border-radius: 12px;
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  border: 1px solid #e0e0e0;
+}
+
+h1 { text-align:center; color:#333; margin:15px 0; }
+
+.section-titre {
+  font-weight:bold; 
+  color:#444; 
+  margin:10px 0 10px; 
+  font-size:15px; 
+  border-bottom:1px solid #eee; 
+  padding-bottom:5px;
+}
+
+.ajout-famille {
+  display:flex;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:10px;
+}
+
+.ajout-famille input {
+  padding:8px 10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:14px;
+  flex:1;
+}
+
+.ajout-famille button {
+  padding:8px 12px;
+  background:var(--primary);
+  border:none;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.depense-box {
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:8px;
+  color:white;
+  font-size:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.depense-info { flex:1; }
+.depense-info strong { font-size:14px; }
+
+.famille-block { margin-bottom:25px; }
+
+.famille-titre { 
+  font-weight:bold; 
+  margin-bottom:15px; /* plus d'espace sous le titre */
+  display:flex; 
+  align-items:center; 
+  gap:8px;
+}
+
+.color-box {
+  display:inline-block;
+  width:22px;
+  height:22px;
+  border:1px solid #ccc;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+/* Champ type INLINE */
+.ajout-type-inline { display:flex; gap:6px; margin-left:auto; align-items:center; }
+.ajout-type-inline input { flex:1; padding:4px 6px; font-size:13px; border-radius:4px; border:1px solid #ccc; }
+.ajout-type-inline button { padding:4px 6px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; }
+
+.palette-couleurs-popup {
+  position:absolute;
+  display:grid;
+  grid-template-columns: repeat(10, 24px);
+  gap:4px;
+  padding:10px;
+  background:white;
+  border:1px solid #ccc;
+  border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  z-index:9999;
+}
+
+.palette-couleurs-popup .couleur {
+  width:24px;
+  height:24px;
+  border-radius:4px;
+  cursor:pointer;
+  border:1px solid #9993;
+}
+
+.palette-couleurs-popup .couleur:hover { outline:2px solid #0004; }
+
+.navbar {
+  position: fixed;
+  bottom:15px;
+  left:10px;
+  right:10px;
+  background:#fff;
+  border-radius:25px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  height:80px;
+  font-weight:600;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15);
+  padding:0 15px;
+  z-index:1000;
+}
+.navbar a {
+  flex:1;
+  text-decoration:none;
+  color:var(--text-light);
+  font-size:14px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:10px 0;
+  border-radius:15px;
+  margin:0 3px;
+  background:#f9fafb;
+}
+.navbar a.active { color:#fff; background:var(--primary); box-shadow:0 4px 10px rgba(0,0,0,0.2); }
+.navbar a:hover { background:#e5e7eb; }
+
+</style>
+</head>
+
+<body>
+
+<h1>Catalogue</h1>
+
+<div class="famille-container">
+  <div class="section-titre">FAMILLE dépense</div>
+  <div class="ajout-famille">
+    <input type="text" id="familleNom" placeholder="Nom de la famille">
+    <span class="color-box" id="familleColorBox" style="background:#ffffff;"></span>
+    <button id="btnAddFamille">Ajouter</button>
+  </div>
+  <div id="catalogue"></div>
+</div>
+
+<div class="navbar">
+  <a href="index.html">🏠</a>
+  <a href="page2.html">Historique</a>
+  <a href="page3.html">Stats</a>
+  <a href="page4.html" class="active">Catalogue</a>
+  <a href="page5.html">⚙️</a>
+</div>
+
+<script>
+let familles = JSON.parse(localStorage.getItem("familles")) || [];
+let types = JSON.parse(localStorage.getItem("types")) || [];
+
+const base1 = ["#fde5e5","#ffe8d9","#fff6cc","#f4ffcc","#e0f8dc","#d8fcf8","#d9f7ff","#e1ecff","#ede0ff","#fce6ff"];
+const base2 = ["#f8baba","#ffd0a3","#ffed80","#dcff80","#b7edc0","#aef6ef","#aeeaff","#c2d4ff","#d0baff","#f8c2f0"];
+const base3 = ["#ef7f7f","#ffae58","#ffe033","#c2ff33","#86e19d","#81e7df","#5fd7ff","#92b3ff","#b490ff","#ee91e1"];
+const base4 = ["#e53935","#ff8c00","#ffd000","#8bd600","#4cb96e","#36cfc7","#00b9ff","#4f82ff","#8a5fff","#d64acb"];
+const base5 = ["#b71c1c","#e65100","#e1b000","#5ea300","#2f8d4f","#1b9e9a","#0082b4","#2a56b9","#6539a8","#a0208b"];
+const base6 = ["#7f1313","#993800","#947f00","#3f6e00","#1f602f","#0d6c69","#00506f","#18357e","#44257b","#6b155d"];
+
+const couleurs = [...base1, ...base2, ...base3, ...base4, ...base5, ...base6];
+
+let couleurSelectionnee = "#ffffff";
+const famBox = document.getElementById("familleColorBox");
+let paletteVisible = null;
+
+famBox.addEventListener("click", e => {
+  e.stopPropagation();
+  ouvrirPalette(null,'famille',famBox);
+});
+
+document.addEventListener("click", () => {
+  if(paletteVisible) paletteVisible.remove();
+  paletteVisible=null;
+});
+
+function save() { 
+  localStorage.setItem("familles", JSON.stringify(familles)); 
+  localStorage.setItem("types", JSON.stringify(types)); 
+}
+
+function majFamillesSelect() { 
+  // inutile maintenant, mais conservé pour compatibilité
+}
+
+function ouvrirPalette(id,type,box=null){
+  if(paletteVisible) paletteVisible.remove();
+  const container = document.createElement("div");
+  container.className = "palette-couleurs-popup";
+
+  couleurs.forEach(c=>{
+    const div = document.createElement("div");
+    div.className="couleur";
+    div.style.backgroundColor = c;
+
+    div.onclick = (e)=>{
+      e.stopPropagation();
+      if(type==='famille' && id){
+        const f = familles.find(x=>x.id===id); 
+        f.couleur=c;
+      } 
+      else if(type==='famille' && !id){
+        couleurSelectionnee = c; 
+        if(box) box.style.background = c;
+      }
+      save(); afficher(); container.remove(); paletteVisible=null;
+    };
+    container.appendChild(div);
+  });
+
+  document.body.appendChild(container);
+  paletteVisible = container;
+  if(box){
+    const rect = box.getBoundingClientRect();
+    container.style.top = rect.bottom + window.scrollY + "px";
+    container.style.left = rect.left + window.scrollX + "px";
+  }
+}
+
+document.getElementById("btnAddFamille").onclick = ()=>{
+  const nom = document.getElementById("familleNom").value.trim();
+  if(!nom) return alert("Nom vide !");
+  familles.push({id:Date.now(), nom, couleur:couleurSelectionnee});
+  save();
+  document.getElementById("familleNom").value="";
+  famBox.style.background="#ffffff";
+  couleurSelectionnee="#ffffff";
+  afficher();
+};
+
+function varianteCouleur(hex,index){
+  let c = hex.replace("#","");
+  let r = parseInt(c.substring(0,2),16);
+  let g = parseInt(c.substring(2,4),16);
+  let b = parseInt(c.substring(4,6),16);
+  let factor = 1 + index*0.25;
+  r = Math.min(255, r*factor); 
+  g = Math.min(255, g*factor); 
+  b = Math.min(255, b*factor);
+  return `rgb(${Math.floor(r)},${Math.floor(g)},${Math.floor(b)})`;
+}
+
+function afficher(){
+  const div = document.getElementById("catalogue");
+  div.innerHTML = "";
+
+  familles.forEach(fam=>{
+    const blocFam = document.createElement("div");
+    blocFam.className="famille-block";
+
+    const titreFam = document.createElement("div");
+    titreFam.className="famille-titre";
+
+    const nomSpan = document.createElement("span");
+    nomSpan.textContent = fam.nom;
+
+    const colorSpan = document.createElement("span");
+    colorSpan.className="color-box";
+    colorSpan.style.background=fam.couleur;
+    colorSpan.onclick = (e)=>{ e.stopPropagation(); ouvrirPalette(fam.id,'famille',colorSpan); };
+
+    const btnEditFam = document.createElement("button");
+    btnEditFam.textContent="✏️";
+    btnEditFam.onclick=()=>modifFamille(fam.id);
+
+    const btnDelFam = document.createElement("button");
+    btnDelFam.textContent="🗑️";
+    btnDelFam.onclick=()=>supprFamille(fam.id);
+
+    // Champ Ajouter type INLINE
+    const ajoutTypeDiv = document.createElement("div");
+    ajoutTypeDiv.className="ajout-type-inline";
+    const inputType = document.createElement("input");
+    inputType.placeholder="Ajouter type...";
+    inputType.onclick = e => e.stopPropagation();
+    const btnAddTypeInline = document.createElement("button");
+    btnAddTypeInline.textContent="➕";
+    btnAddTypeInline.onclick = e=>{
+      e.stopPropagation();
+      const val = inputType.value.trim();
+      if(!val) return;
+      types.push({id:Date.now(), nom:val, familleId:fam.id});
+      save(); inputType.value=""; afficher();
+    };
+    ajoutTypeDiv.appendChild(inputType);
+    ajoutTypeDiv.appendChild(btnAddTypeInline);
+
+    titreFam.appendChild(nomSpan);
+    titreFam.appendChild(colorSpan);
+    titreFam.appendChild(btnEditFam);
+    titreFam.appendChild(btnDelFam);
+    titreFam.appendChild(ajoutTypeDiv);
+
+    blocFam.appendChild(titreFam);
+
+    const tFam = types.filter(t=>t.familleId===fam.id);
+    tFam.forEach((t,i)=>{
+      const box = document.createElement("div");
+      box.className="depense-box";
+      box.style.background=varianteCouleur(fam.couleur,i);
+
+      const info = document.createElement("div");
+      info.className="depense-info";
+      info.innerHTML = `<small style="opacity:0.7;">${fam.nom}</small> / <strong>${t.nom}</strong>`;
+
+      const btnEditType = document.createElement("button");
+      btnEditType.textContent="✏️";
+      btnEditType.onclick = ()=>modifType(t.id);
+
+      const btnDelType = document.createElement("button");
+      btnDelType.textContent="🗑️";
+      btnDelType.onclick = ()=>supprType(t.id);
+
+      box.appendChild(info);
+      box.appendChild(btnEditType);
+      box.appendChild(btnDelType);
+
+      blocFam.appendChild(box);
+    });
+
+    div.appendChild(blocFam);
+  });
+}
+
+function supprType(id){
+  if(!confirm("Supprimer ce type ?")) return;
+  types=types.filter(t=>t.id!==id);
+  save(); afficher();
+}
+
+function modifType(id){
+  const t=types.find(x=>x.id===id);
+  if(!t) return;
+  const nv=prompt("Nom :",t.nom);
+  if(!nv) return;
+  t.nom=nv;
+  save(); afficher();
+}
+
+function supprFamille(id){
+  if(!confirm("Supprimer cette famille et tous ses types ?")) return;
+  familles=familles.filter(f=>f.id!==id);
+  types=types.filter(t=>t.familleId!==id);
+  save(); afficher();
+}
+
+function modifFamille(id){
+  const f=familles.find(f=>f.id===id);
+  if(!f) return;
+  const nv=prompt("Nom :",f.nom);
+  if(!nv) return;
+  f.nom=nv;
+  save(); afficher();
+}
+
+afficher();
+</script>
+
+</body>
+</html>

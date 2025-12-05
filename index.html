@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="UTF-8" />
+<title>Budget du jour</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #3b82f6;
+  --secondary: #6b7280;
+  --bg: #f3f4f6;
+  --card-bg: #ffffff;
+  --danger: #ef4444;
+  --text-dark: #111827;
+  --text-light: #6b7280;
+  --border-radius: 14px;
+  --shadow: 0 6px 20px rgba(0,0,0,0.08);
+  --transition: 0.25s ease;
+}
+
+* { box-sizing: border-box; margin:0; padding:0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  padding-bottom: 120px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+h1 {
+  margin: 25px 0 15px 0;
+  color: var(--text-dark);
+  font-weight: 600;
+  font-size: 1.8rem;
+  text-align:center;
+}
+
+/* ===== BUDGET & STATS COMPACT ===== */
+.budget-box {
+  background: var(--card-bg);
+  width: 90%;
+  max-width: 400px;
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  text-align:center;
+}
+
+.budget-compact {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:5px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.budget-rest-green { font-weight:700; color:green; }
+.budget-rest-red { font-weight:700; color:red; }
+
+.stats-content {
+  display: block;
+  margin-top:5px;
+}
+
+.stat-item {
+  margin: 4px 0;
+  display:flex;
+  justify-content: space-between;
+  font-size:0.95rem;
+}
+
+.stat-pos { color:green; font-weight:600; }
+.stat-neg { color:red; font-weight:600; }
+
+/* DATE BAR */
+.date-bar {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.date-bar input {
+  padding:10px;
+  border-radius:var(--border-radius);
+  border:1px solid #d1d5db;
+  background:#fff;
+  font-size:16px;
+  transition:border-color var(--transition);
+}
+
+.date-bar input:focus { border-color: var(--primary); outline:none; }
+
+.date-bar button {
+  padding:10px 16px;
+  border-radius:var(--border-radius);
+  border:none;
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  font-size:16px;
+  transition:all var(--transition);
+}
+
+.date-bar button:hover { background:#2563eb; transform:translateY(-2px); }
+
+/* FORMULAIRE AJOUT */
+.container {
+  background:var(--card-bg);
+  padding:20px;
+  border-radius:var(--border-radius);
+  box-shadow:var(--shadow);
+  width:90%;
+  max-width:400px;
+  margin-bottom:25px;
+  text-align:center;
+}
+
+.container label { display:block; text-align:left; margin-bottom:6px; font-weight:500; color:var(--text-dark); font-size:0.95rem; }
+.container input, .container select {
+  width:100%;
+  padding:10px;
+  margin-bottom:14px;
+  border-radius:var(--border-radius);
+  border:1px solid #d1d5db;
+  background:#fff;
+  transition:border-color var(--transition);
+  font-size:0.95rem;
+}
+.container input:focus, select:focus { border-color:var(--primary); outline:none; }
+
+.container button {
+  width:100%;
+  padding:12px 0;
+  border:none;
+  border-radius:var(--border-radius);
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  font-size:1rem;
+  cursor:pointer;
+  transition:all var(--transition);
+}
+.container button:hover { background:#2563eb; transform:translateY(-2px); }
+
+/* Famille + Type sur la même ligne */
+.row-flex { display:flex; gap:10px; }
+.row-flex select { flex:1; }
+
+/* TABLE */
+table {
+  width:90%;
+  max-width:400px;
+  border-collapse:collapse;
+  margin-bottom:25px;
+}
+
+th, td {
+  border-bottom:1px solid #e5e7eb;
+  padding:8px;
+  text-align:center;
+  font-size:0.95rem;
+}
+
+.delete {
+  color:var(--danger);
+  cursor:pointer;
+  font-weight:bold;
+  transition:transform var(--transition);
+}
+.delete:hover { transform:scale(1.2); }
+
+/* NAVBAR */
+.navbar {
+  position: fixed;
+  bottom:15px;
+  left:10px;
+  right:10px;
+  background:#fff;
+  border-radius:25px;
+  display:flex;
+  justify-content:space-between;
+  height:80px;
+  align-items:center;
+  padding:0 15px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15);
+  z-index:1000;
+}
+
+.navbar a {
+  flex:1;
+  text-align:center;
+  text-decoration:none;
+  color:var(--text-light);
+  font-size:14px;
+  padding:10px 0;
+  background:#f9fafb;
+  margin:0 4px;
+  border-radius:15px;
+  transition:all var(--transition);
+}
+.navbar a.active { background:var(--primary); color:#fff; transform:translateY(-3px); box-shadow:0 4px 10px rgba(0,0,0,0.2); }
+.navbar a:hover { background:#e5e7eb; transform:translateY(-2px); }
+</style>
+</head>
+
+<body>
+
+<!-- BUDGET & STATS COMPACT -->
+<div id="budgetBox" class="budget-box" style="display:none;">
+  <div class="budget-compact">
+    <span id="depensesCompact">0 €</span>
+    <span>/</span>
+    <span id="budgetCompact">0 €</span>
+    <span>(reste :</span>
+    <span id="resteCompact" class="budget-rest-green">0 €)</span>
+  </div>
+
+  <div id="statsContent" class="stats-content">
+    <div class="stat-item"><span>Moyenne théorique :</span><span id="moyenneTheorique">0 €</span></div>
+    <div class="stat-item"><span>Moyenne actuelle :</span><span id="moyenneActuelle">0 €</span></div>
+    <div class="stat-item"><span>Moyenne conseillée :</span><span id="moyenneConseillee">0 €</span></div>
+
+    <div class="stat-item"><span>Projection fin du mois :</span><span id="projection">0 €</span></div>
+    <div class="stat-item"><span>Dépassement prévu le :</span><span id="dateDepassement">-</span></div>
+  </div>
+</div>
+
+<h1>Dépenses du <span id="dateDisplay"></span></h1>
+
+<!-- DATE SELECTOR -->
+<div class="date-bar">
+  <input type="date" id="dateJour">
+  <button id="btnToday">Aujourd'hui</button>
+</div>
+
+<!-- FORMULAIRE AJOUT -->
+<div class="container">
+  <label>Nom de la dépense</label>
+  <input type="text" id="nomDepense" placeholder="Ex : McDo">
+
+  <div class="row-flex">
+    <div>
+      <label>Famille</label>
+      <select id="familleSelect"></select>
+    </div>
+    <div>
+      <label>Type</label>
+      <select id="typeSelect"></select>
+    </div>
+  </div>
+
+  <label>Montant (€)</label>
+  <input type="number" id="montant" step="0.01" placeholder="Ex : 12.50">
+
+  <button id="ajouterBtn">Ajouter</button>
+</div>
+
+<!-- TABLEAU -->
+<table id="tableau">
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Famille</th>
+      <th>Type</th>
+      <th>Montant</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+  <tfoot>
+    <tr>
+      <td colspan="5"><strong>Total : <span id="total"></span> €</strong></td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <a href="index.html" class="active">🏠</a>
+  <a href="page2.html">Historique</a>
+  <a href="page3.html">Stats</a>
+  <a href="page4.html">Catalogue</a>
+  <a href="page5.html">⚙️</a>
+</div>
+
+<script>
+// INITIALISATION
+const nomInput = document.getElementById("nomDepense");
+const familleSelect = document.getElementById("familleSelect");
+const typeSelect = document.getElementById("typeSelect");
+const montantInput = document.getElementById("montant");
+const ajouterBtn = document.getElementById("ajouterBtn");
+
+const dateJour = document.getElementById("dateJour");
+const btnToday = document.getElementById("btnToday");
+const dateDisplay = document.getElementById("dateDisplay");
+
+const tbody = document.querySelector("#tableau tbody");
+const totalEl = document.getElementById("total");
+
+const budgetBox = document.getElementById("budgetBox");
+const depensesCompact = document.getElementById("depensesCompact");
+const budgetCompact = document.getElementById("budgetCompact");
+const resteCompact = document.getElementById("resteCompact");
+
+const moyenneTheorique = document.getElementById("moyenneTheorique");
+const moyenneActuelle = document.getElementById("moyenneActuelle");
+const moyenneConseillee = document.getElementById("moyenneConseillee");
+const projectionDiv = document.getElementById("projection");
+const dateDepassement = document.getElementById("dateDepassement");
+
+function todayString() {
+  const d = new Date();
+  return d.toISOString().split("T")[0];
+}
+
+const today = todayString();
+dateJour.value = today;
+dateJour.max = today;
+dateDisplay.textContent = today;
+
+let familles = JSON.parse(localStorage.getItem("familles")) || [];
+let types = JSON.parse(localStorage.getItem("types")) || [];
+let jours = JSON.parse(localStorage.getItem("jours")) || {};
+let settings = JSON.parse(localStorage.getItem("settings")) || { budget: null };
+if (!jours[today]) jours[today] = [];
+let dateCourante = today;
+
+function chargerFamilles() {
+  familleSelect.innerHTML = "";
+  familles.forEach(f => {
+    const opt = document.createElement("option");
+    opt.value = f.id;
+    opt.textContent = f.nom;
+    familleSelect.appendChild(opt);
+  });
+  chargerTypes();
+}
+
+function chargerTypes() {
+  const familleId = parseInt(familleSelect.value);
+  typeSelect.innerHTML = "";
+  const filtres = types.filter(t => t.familleId === familleId);
+  filtres.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.nom;
+    typeSelect.appendChild(opt);
+  });
+}
+
+familleSelect.addEventListener("change", chargerTypes);
+chargerFamilles();
+
+function mettreAJourBudgetEtStats() {
+  const budget = settings.budget;
+  if (!budget) {
+    budgetBox.style.display = "none";
+    return;
+  }
+
+  const date = new Date();
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const moisPrefix = `${yyyy}-${mm}`;
+
+  let totalMois = 0;
+  Object.keys(jours).forEach(j => {
+    if (j.startsWith(moisPrefix)) {
+      jours[j].forEach(dep => totalMois += dep.montant);
+    }
+  });
+
+  const nbJoursEcoules = date.getDate();
+  const nbJoursMois = new Date(yyyy, parseInt(mm), 0).getDate();
+
+  // ⭐ 1 — Moyenne théorique
+  const moyTheo = budget / nbJoursMois;
+
+  // ⭐ 2 — Moyenne actuelle
+  const moyActuelle = totalMois / nbJoursEcoules;
+
+  // ⭐ 3 — Moyenne conseillée (celle que tu veux)
+  const reste = budget - totalMois;
+  const joursRestants = nbJoursMois - nbJoursEcoules;
+  const moyConseilleeVal = reste / joursRestants;
+
+  moyenneTheorique.textContent = moyTheo.toFixed(2) + " €";
+  moyenneActuelle.textContent = moyActuelle.toFixed(2) + " €";
+  moyenneConseillee.textContent = moyConseilleeVal.toFixed(2) + " €";
+
+  if (moyConseilleeVal >= 0) {
+    moyenneConseillee.style.color = "green";
+  } else {
+    moyenneConseillee.style.color = "red";
+  }
+
+  // 📌 PROJECTION
+  const proj = moyActuelle * nbJoursMois;
+  const marge = budget - proj;
+  const margeFormatee = marge.toFixed(2).replace('.', ',');
+
+  projectionDiv.innerHTML = `
+    ${proj.toFixed(2).replace('.', ',')} €
+    <span style="color:${marge >= 0 ? "green" : "red"}; font-weight:600;">
+      / ${marge >= 0 ? "+" : ""}${margeFormatee} €
+    </span>
+  `;
+
+  // 📌 Dépassement prévu
+  let depassement = "-";
+  if (moyActuelle > 0) {
+    const jourDepassement = Math.ceil(budget / moyActuelle);
+    depassement = jourDepassement <= nbJoursMois ? `${jourDepassement}/${mm}` : "Aucun";
+  }
+
+  dateDepassement.textContent = depassement;
+
+  // 📌 Mise à jour compact
+  depensesCompact.textContent = totalMois.toFixed(2) + " €";
+  budgetCompact.textContent = budget + " €";
+
+  resteCompact.textContent = reste.toFixed(2) + " €";
+  resteCompact.className = reste >= 0 ? "budget-rest-green" : "budget-rest-red";
+
+  budgetBox.style.display = "block";
+}
+
+function afficher() {
+  tbody.innerHTML = "";
+  let total = 0;
+
+  jours[dateCourante].forEach((d,i)=>{
+    const fam = familles.find(f=>f.id===d.familleId)?.nom || "?";
+    const type = types.find(t=>t.id===d.typeId)?.nom || "?";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.nom}</td>
+      <td>${fam}</td>
+      <td>${type}</td>
+      <td>${d.montant.toFixed(2)} €</td>
+      <td><span class="delete" data-i="${i}">✖</span></td>
+    `;
+    tbody.appendChild(tr);
+    total+=d.montant;
+  });
+
+  totalEl.textContent = total.toFixed(2);
+  mettreAJourBudgetEtStats();
+}
+
+tbody.addEventListener("click", e => {
+  if(e.target.classList.contains("delete")){
+    const i = e.target.dataset.i;
+    jours[dateCourante].splice(i,1);
+    localStorage.setItem("jours", JSON.stringify(jours));
+    afficher();
+  }
+});
+
+ajouterBtn.addEventListener("click", ()=>{
+  let nom = nomInput.value.trim();
+  const familleId = parseInt(familleSelect.value);
+  const typeId = parseInt(typeSelect.value);
+  const montant = parseFloat(montantInput.value);
+
+  // Si nom vide, on met un espace
+  if(!nom) nom = " ";
+
+  // Vérification des autres champs
+  if(isNaN(familleId) || isNaN(typeId) || isNaN(montant)) return;
+
+  jours[dateCourante].push({nom,familleId,typeId,montant});
+  localStorage.setItem("jours", JSON.stringify(jours));
+
+  nomInput.value=""; 
+  montantInput.value="";
+  afficher();
+});
+
+
+dateJour.addEventListener("change", ()=>{
+  dateCourante = dateJour.value;
+  if(!jours[dateCourante]) jours[dateCourante]=[];
+  dateDisplay.textContent=dateCourante;
+  afficher();
+});
+
+btnToday.addEventListener("click", ()=>{
+  dateJour.value = today;
+  dateCourante = today;
+  dateDisplay.textContent = today;
+  afficher();
+});
+
+window.onload=afficher;
+</script>
+
+</body>
+</html>
