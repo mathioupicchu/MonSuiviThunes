@@ -1,6 +1,6 @@
 {
-  "name": "Mon Alcoolomètre",
-  "short_name": "Alcoolomètre",
+  "name": "Mon Thunomètre",
+  "short_name": "Thunomètre",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -19,3 +19,4 @@
     }
   ]
 }
+
